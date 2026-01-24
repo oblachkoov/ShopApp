@@ -20,7 +20,7 @@ class UserRepository:
         self.session = session
 
 
-    async def get_user(self, username: str) -> User | None:
+    async def get_user_by_username(self, username: str) -> User | None:
         """
         Метод для получения поль.
 
@@ -97,7 +97,7 @@ class UserRepository:
         """
         Метод для обновления поль.
 
-        Изменяет  обновление поль.
+        Изменяет обновление поль.
 
         :param user_id: Идентификатор поль.
         :param hashed_password: Новый хэшированный пароль
