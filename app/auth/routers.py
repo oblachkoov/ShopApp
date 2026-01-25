@@ -7,7 +7,8 @@ from starlette import status
 from app.auth import manager
 from app.auth.dependencies import get_auth_manager
 from app.auth.manager import AuthManager
-from app.auth.schemas import Token, UserRead, UserRegister
+from app.auth.models import User
+from app.auth.schemas import Token, UserRead, UserRegister, ChangePasswordSchema
 from app.core.dependencies import get_db
 
 #TODO: "OAuth2PasswordRequestForm -> ОН У НАС multipart-data
@@ -31,12 +32,13 @@ class AuthRouter:
 
         }#Какие ещё ответы он может вернуть
     )
+
     async def login(
             self,
             form_data: OAuth2PasswordRequestForm = Depends(),
-    ):
+    )->Token:
         """
-
+        Авторизация поль. по логину и паролю
         """
         response = await self.manager.login(
             username=form_data.username,
@@ -54,15 +56,18 @@ class AuthRouter:
 
         }
     )
+
     async def register(
             self,
             request: UserRegister,
     ):
+        """
+        Метод нового поль.
+        """
         response = await self.manager.register(request)
         return response
 
     
-
 
     async def get_auth_manager(
             session: AsyncSession = Depends(get_db),
@@ -72,3 +77,58 @@ class AuthRouter:
         :param session:
         :return:
         """
+        return AuthManager(session)
+
+
+
+    @router.get(
+        "/me",
+        summary="Получить текущего пользователя",
+        response_model=UserRead,
+        status_code=status.HTTP_200_OK,
+        responses={},
+    )
+    async def get_me(
+            self,
+            session: AsyncSession = Depends(get_db),
+    )->User:
+        """
+        Получение данных текущего поль.
+        """
+        return User
+
+    @router.post(
+        "/change_password",
+        summary="Смена пароля",
+        status_code=status.HTTP_200_OK,
+        responses={},
+    )
+    async def change_password(
+            self,
+            request: ChangePasswordSchema,
+            session: AsyncSession = Depends(get_db),
+    ):
+        """
+        Смена пароля авторизованного поль.
+        """
+        response = await self.manager.change_password(User, request)
+        return response
+
+
+    @router.post(
+        "/refresh_token",
+        summary="Обновление токенов",
+        status_code=status.HTTP_200_OK,
+        responses={},
+    )
+    async def refresh_token(
+            self,
+            request: Token,
+            session: AsyncSession = Depends(get_db),
+    ):
+        """
+        Обновление JWT токенов
+        """
+        response = await self.manager.refresh_token(request)
+        return response
+
