@@ -1,15 +1,14 @@
 from fastapi import Depends, APIRouter
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_utils.cbv import cbv
-from sqlalchemy.ext.asyncio import AsyncSession
+
 from starlette import status
 
-from app.auth import manager
-from app.auth.dependencies import get_auth_manager
+
+from app.auth.dependencies import get_auth_manager, get_current_user
 from app.auth.manager import AuthManager
 from app.auth.models import User
-from app.auth.schemas import Token, UserRead, UserRegister, ChangePasswordSchema
-from app.core.dependencies import get_db
+from app.auth.schemas import Token, UserRead, UserRegister, ChangePasswordSchema, RefreshToken
 
 #TODO: "OAuth2PasswordRequestForm -> ОН У НАС multipart-data
 
@@ -21,22 +20,22 @@ router = APIRouter(
 
 @cbv(router)
 class AuthRouter:
-    manager: AuthManager = Depends(get_auth_manager),
+    manager: AuthManager = Depends(get_auth_manager)
 
     @router.post(
         "/login",
         summary="Авторизация в систему", #Название нашего Эндпоинта
         response_model=Token,
-        status_code=status.HTTP_200_CREATED, #Какой стату код он нам вернёт
-        responses={
-
-        }#Какие ещё ответы он может вернуть
+        status_code=status.HTTP_201_CREATED, #Какой стату код он нам вернёт
+        # responses={
+        #
+        # }#Какие ещё ответы он может вернуть
     )
 
     async def login(
             self,
             form_data: OAuth2PasswordRequestForm = Depends(),
-    )->Token:
+    ):
         """
         Авторизация поль. по логину и паролю
         """
@@ -67,17 +66,7 @@ class AuthRouter:
         response = await self.manager.register(request)
         return response
 
-    
 
-    async def get_auth_manager(
-            session: AsyncSession = Depends(get_db),
-    ):
-        """
-        Функция для создания объект AuthManager
-        :param session:
-        :return:
-        """
-        return AuthManager(session)
 
 
 
@@ -90,12 +79,13 @@ class AuthRouter:
     )
     async def get_me(
             self,
-            session: AsyncSession = Depends(get_db),
-    )->User:
+            user: User = Depends(get_current_user),
+    ):
         """
         Получение данных текущего поль.
         """
-        return User
+        return user
+
 
     @router.post(
         "/change_password",
@@ -106,12 +96,12 @@ class AuthRouter:
     async def change_password(
             self,
             request: ChangePasswordSchema,
-            session: AsyncSession = Depends(get_db),
+            user: User = Depends(get_current_user),
     ):
         """
         Смена пароля авторизованного поль.
         """
-        response = await self.manager.change_password(User, request)
+        response = await self.manager.change_password(user, request)
         return response
 
 
@@ -123,12 +113,11 @@ class AuthRouter:
     )
     async def refresh_token(
             self,
-            request: Token,
-            session: AsyncSession = Depends(get_db),
+            request: RefreshToken,
     ):
         """
         Обновление JWT токенов
         """
-        response = await self.manager.refresh_token(request)
+        response = await self.manager.refresh_token(request.refresh_token)
         return response
 

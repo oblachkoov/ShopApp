@@ -19,7 +19,7 @@ class UserBase(BaseModel):
     """
     username: str = Field(min_length=3, max_length=320)
     email: EmailStr
-    full_name: str = Field(max_length=3, min_length=512)
+    fullname: str = Field(max_length=512, min_length=3)
 
     @field_validator("username", mode="before")
     @classmethod
@@ -40,7 +40,7 @@ class UserBase(BaseModel):
 
         #Второе - нельзя исполь. Другие спец. Символы
 
-        if re.fullmatch(
+        if not re.fullmatch(
                 r'^[A-Za-z][A-Za-z0-9_]*$',
             value,
         ):
@@ -138,9 +138,10 @@ class ChangePasswordSchema(BaseModel):
         """
         return validate_password(value)
 
-    @model_validator
-    def cjeck_password_match(self):
-        if self.old_password != self.new_password:
+
+    @model_validator(mode="after")
+    def check_password_match(self):
+        if self.old_password == self.new_password:
             raise ValueError("Passwords don't match")
         return self
 
@@ -166,7 +167,13 @@ class UserRead(UserBase):
     updated_at: datetime | None = None
 
 
+class RefreshToken(BaseModel):
+    refresh_token: str
+
+
 class Token(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str = "Bearer"
+
+

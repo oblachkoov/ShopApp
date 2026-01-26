@@ -76,7 +76,7 @@ class AuthManager:
             raise UsernameAlreadyConflict(
                 "Username is already registered. Please try again."
             )
-        user = self.user_repo.get_user_by_email(request.email)
+        user = await self.user_repo.get_user_by_email(request.email)
         if user:
             raise EmailAlreadyExists(
                 "Email is already registered. Please try again."
@@ -93,7 +93,7 @@ class AuthManager:
         user = await self.user_repo.create(
             hashed_password=hashed_password,
             **request.model_dump(
-                exclude={"passsword"}
+                exclude={"password"}
             )
         )
         await  self.session.commit()
@@ -120,9 +120,9 @@ class AuthManager:
                 "Invalid Credentials",
             )
 
-        if not payload.get("sub") or payload.get("sub").isdigit():
+        if not payload.get("sub") or not payload.get("sub").isdigit():
             raise InvalidToken(
-                "Invalid Token",
+                "Invalid Token"
             )
 
         user = await self.user_repo.get_user_by_id(int(payload.get("sub")))
@@ -136,7 +136,7 @@ class AuthManager:
 
     async def change_password(
             self,
-            user: int,
+            user: User,
             request: ChangePasswordSchema
     ) -> None:
         """

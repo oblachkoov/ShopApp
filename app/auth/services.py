@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 
 
 from jose import jwt, JWTError
-from passlib.exc import InvalidTokenError
 from passlib.hash import argon2
 
 from app.auth.exceptions import InvalidToken
@@ -64,8 +63,8 @@ class TokenServices:
         }
         return jwt.encode(
             payload,
-            algorithm=settings.JWT_ALGORITHM,
-            key=settings.SECRET_KEY,
+            algorithm=settings.TOKEN_ALGORITHM,
+            key=settings.TOKEN_SECRET_KEY,
         )
 
 
@@ -75,14 +74,14 @@ class TokenServices:
         :param token: JWT токен
         :return: Payload то есть информацию о нашем субъекте
         """
-    try:
-        payload = jwt.decode(
-            token,
-            algorithms=[settings.JWT_ALGORITHM],
-            key=settings.JWT_SECRET_KEY,
-        )
-    except JWTError:
-        raise InvalidToken(
-            "Invalid token",
-        )
-    raise payload
+        try:
+            payload = jwt.decode(
+                token,
+                algorithms=[settings.TOKEN_ALGORITHM],
+                key=settings.TOKEN_SECRET_KEY,
+            )
+        except JWTError:
+            raise InvalidToken(
+                "Invalid token",
+            )
+        return payload
