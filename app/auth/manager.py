@@ -1,6 +1,3 @@
-from urllib.request import Request
-
-from jose import jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.exceptions import InvalidUsernamePassword, UsernameAlreadyConflict, EmailAlreadyExists, InvalidToken
