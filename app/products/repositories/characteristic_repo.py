@@ -32,11 +32,24 @@ class CharacteristicRepo:
     async def get_characteristic_by_id(
             self,
             characteristic_id: int,
+            product_id,
     )-> ProductCharacteristics:
-        stmt = select(ProductCharacteristics).where(ProductCharacteristics.id == characteristic_id)
+        stmt = select(ProductCharacteristics).where(ProductCharacteristics.id == characteristic_id, ProductCharacteristics.product_id == product_id)
         result = await self.session.execute(stmt)
         product_characteristic = result.scalar_one_or_none()
         return product_characteristic
+
+
+    async def get_all(
+            self,
+            product_id
+    ):
+        stmt = select(ProductCharacteristics).where(
+            ProductCharacteristics.product_id == product_id,
+        )
+        result = await self.session.execute(stmt)
+        return result.scalars().all()
+
 
     async def update_characteristic(
             self,

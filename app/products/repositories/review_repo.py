@@ -32,9 +32,10 @@ class ReviewRepository:
 
     async def get_review_by_id(
             self,
-            review_id: int
+            review_id,
+            product_id
     )-> ProductReview:
-        stmt = select(ProductReview).where(ProductReview.id == review_id)
+        stmt = select(ProductReview).where(ProductReview.id == review_id, ProductReview.product_id==product_id)
         result = await self.session.execute(stmt)
         product_review = result.scalar_one_or_none()
         return product_review

@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.products.models import ProductReview
+from app.products.models import ProductReview, Product
 from app.products.repositories.review_repo import ReviewRepository
 from app.products.schemas import ProductReviewCreate, ProductReviewUpdate
 
@@ -12,34 +12,40 @@ class ReviewManager:
 
     async def get_review(
             self,
+            product: Product,
             review_id: int
-    ) -> ProductReview | None:
-        return await self.review_repo.get_review_by_id(review_id)
+    ) -> ProductReview:
+        review = self.review_repo.get_review_by_id(review_id, product.id)
+        if not review:
+            return await self.review_repo.get_review_by_id(review_id)
+
 
     async def create_review(
             self,
-            request: ProductReviewCreate
+            request: ProductReviewCreate,
+            user,
+            product: Product
     ) -> ProductReview:
         review = await self.review_repo.create_review(
+            **request.model_dump(),
             user_id=request.user_id,
             product_id=request.product_id,
-            message=request.message,
-            grade=request.grade,
         )
         await self.session.commit()
         return review
 
+
     async def update_review(
             self,
-            review_id: int,
+            review: ProductReview,
             request: ProductReviewUpdate
     ) -> None:
         await self.review_repo.update_review(
-            review_id=review_id,
-            message=request.message,
-            grade=request.grade,
+            review,
+            **request.model_dump(),
         )
         await self.session.commit()
+
 
     async def delete_review(
             self,
@@ -47,6 +53,7 @@ class ReviewManager:
     ) -> None:
         await self.review_repo.delete_review(review_id)
         await self.session.commit()
+
 
     async def get_all_reviews(self):
         pass

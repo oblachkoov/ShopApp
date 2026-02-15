@@ -1,8 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.products.models import ProductCharacteristics
+from app.products.models import ProductCharacteristics, Product
 from app.products.repositories.characteristic_repo import CharacteristicRepo
-from app.products.schemas import ProductCharacteristicsCreate, ProductCharacteristicsUpdate
+from app.products.schemas import ProductCharacteristicsCreate, ProductCharacteristicsUpdate, CharacteristicNotFound
 
 
 class CharacteristicManager:
@@ -10,27 +10,41 @@ class CharacteristicManager:
         self.session = session
         self.characteristic_repo = CharacteristicRepo(session)
 
-    async def get_characteristic(self, characteristic_id: int) -> ProductCharacteristics | None:
-        return await self.characteristic_repo.get_characteristic_by_id(characteristic_id)
+
+    async def get_characteristic(self, product: Product, characteristic_id: int) -> ProductCharacteristics:
+        characteristic = await self.characteristic_repo.get_characteristic_by_id(characteristic_id, product.id)
+        if not characteristic:
+            raise CharacteristicNotFound(
+                "Characteristic not found",
+            )
+        return characteristic
 
 
-    async def create_characteristic(self, request: ProductCharacteristicsCreate) -> ProductCharacteristics:
+    async def get_all_characteristic(
+            self,
+            product: Product,
+    ):
+        characteristics = await self.characteristic_repo.get_all(product.id)
+        return characteristics
+
+
+    async def create_characteristic(self, request: ProductCharacteristicsCreate, product: Product) -> ProductCharacteristics:
         characteristic = await self.characteristic_repo.create_characteristic(
-            name=request.name,
-            value=request.value,
-            product_id=request.product_id
+            **request.model_dump(),
+            product_id=product.id
         )
         await self.session.commit()
         return characteristic
 
-    async def update_characteristic(self, request: ProductCharacteristicsUpdate) -> None:
+
+    async def update_characteristic(self, request: ProductCharacteristicsUpdate, characteristic: ProductCharacteristics) -> None:
         await self.characteristic_repo.update_characteristic(
-            characteristic_id=request.id,
-            name=request.name,
-            value=request.value
+            characteristic,
+            **request.model_dump(),
         )
         await self.session.commit()
 
-    async def delete_characteristic(self, characteristic_id: int) -> None:
-        await self.characteristic_repo.delete_characteristic(characteristic_id)
+
+    async def delete_characteristic(self, characteristic: ProductCharacteristics) -> None:
+        await self.characteristic_repo.delete_characteristic(characteristic)
         await self.session.commit()
