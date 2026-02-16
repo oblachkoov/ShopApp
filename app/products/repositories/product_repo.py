@@ -1,6 +1,8 @@
 from sqlalchemy import insert, update, select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.testing.pickleable import Order
 
+from app.orders.schemas import OrderUpdate
 from app.products.models import Product
 
 
@@ -89,6 +91,17 @@ class ProductRepository:
         )
         await self.session.execute(stmt)
         await self.session.flush()
+
+
+    async def update_status(
+            self,
+            order: Order,
+            status
+    ):
+        order.status = status
+        self.session.add(order)
+        await self.session.flush()
+
 
 
     async def get_by_id(

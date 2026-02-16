@@ -1,0 +1,23 @@
+services:
+    db:
+      image: postgres:16.11
+      container_name: db
+      ports:
+        - "5435:5432"
+      restart: always
+      env_file: .env
+      volumes:
+        - db_data:/var/lib/postgresql/data
+
+    backend:
+      build:
+        context: .
+        dockerfile: Dockerfile
+      container_name: backend
+      ports:
+        - "8000:8000"
+      depends_on:
+        - db
+
+volumes:
+  db_data:
