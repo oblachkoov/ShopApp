@@ -1,5 +1,5 @@
 from datetime import datetime
-from decimal import Decimal
+from typing import List
 
 from pydantic import BaseModel, Field
 from enum import Enum
@@ -12,10 +12,9 @@ class OrdersStatusEnum(str, Enum):
     cancelled = "cancelled"
 
 class OrderProductsBase(BaseModel):
-    order_id: int
     product_id: int
-    quantity: int
-    price: Decimal = Field(max_digits=20, decimal_places=2)
+    quantity: int = Field(ge=0)
+    price: float = Field(ge=0.0)
 
 
 class OrderProductsCreate(OrderProductsBase):
@@ -31,24 +30,27 @@ class OrderProductsRead(OrderProductsBase):
 
 
 class OrderBase(BaseModel):
+    status: OrdersStatusEnum = OrdersStatusEnum.new
     address: str = Field(max_length=255)
     phone_number: str = Field(max_length=20)
     comment: str = Field(max_length=255)
 
 
 class OrderCreate(OrderBase):
-    user_id: int
+    products: List[OrderProductsCreate]
 
 
 class OrderUpdate(OrderBase):
-    pass
+    products: List[OrderProductsUpdate]
 
 
 class OrderStatusUpdate(BaseModel):
-    status: str = Field(max_length=30)
+    status: OrdersStatusEnum = OrdersStatusEnum.new
 
 
 class OrderRead(OrderBase):
     id: int
     created_at: datetime
     products: list[OrderProductsRead]
+    user_id: int
+    total_sum: float

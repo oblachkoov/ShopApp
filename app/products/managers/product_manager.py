@@ -2,7 +2,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.products.models import Product
 from app.products.repositories.product_repo import ProductRepository
-from app.products.schemas import ProductCreate, ProductUpdate, ProductNotFound
+from app.products.schemas import ProductCreate, ProductUpdate
+from app.products.exceptions import ProductNotFound
+
 
 
 class ProductManager:

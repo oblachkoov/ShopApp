@@ -1,4 +1,0 @@
-from app.routers.product import router as product_router
-from app.routers.characteristics import router as characteristics_router
-
-product_router.include_router(characteristics_router)

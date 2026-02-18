@@ -15,10 +15,10 @@ class OrderRepository:
 
     async def create(
             self,
-            user_id: int,
-            phone_number: str,
-            address: str,
-            comment: str,
+            user_id,
+            phone_number,
+            address,
+            comment,
             status,
     ) -> Order:
         stmt = insert(Order).values(
@@ -37,22 +37,21 @@ class OrderRepository:
 
     async def delete(
             self,
-            order_id: int,
+            order: Order,
     ) -> None:
-        stmt = delete(Order).where(Order.id == order_id)
-        await self.session.execute(stmt)
+        await self.session.delete(order)
         await self.session.flush()
 
     async def update(
             self,
-            order_id: int,
-            phone_number: str,
-            address: str,
-            comment: str,
-            status: str,
+            order: Order,
+            phone_number,
+            address,
+            comment,
+            status,
     ) -> None:
-        stmt = update(Order).where(Order.id == order_id).values(
-            order_id=order_id,
+        stmt = update(Order).where(Order.id == order.id).values(
+            order=order,
             phone_number=phone_number,
             address=address,
             comment=comment,
@@ -67,14 +66,22 @@ class OrderRepository:
             self,
             order_id: int,
     )-> Order:
-
         stmt = select(Order).where(Order.id == order_id)
         result = await self.session.execute(stmt)
         product = result.scalar_one_or_none()
         return product
 
 
-    async def get_all(self):
-        pass
+    async def get_all(
+            self,
+            filters
+    ):
+        stmt = select(Order)
+        if filters:
+            stmt = filters.filter(stmt)
+            stmt = filters.sort(stmt)
+        result = await self.session.execute(stmt)
+        order = result.scalars().all()
+        return order
 
 

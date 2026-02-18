@@ -16,3 +16,13 @@ class ReviewNotFound(NotFound):
     """
     Отзыв не найден
     """
+
+
+class CharacteristicNotFound(Exception):
+    pass
+
+
+
+
+class ProductNotFound(Exception):
+    pass

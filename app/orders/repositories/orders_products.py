@@ -1,8 +1,10 @@
-from sqlalchemy import insert, update, select, delete
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.testing.pickleable import Order
 
 from app.orders.models import OrdersProducts
-from app.products.models import Product
+from app.orders.schemas import OrderProductsCreate
+from app.products.routers import product
 
 
 class OrderProductRepository:
@@ -15,54 +17,45 @@ class OrderProductRepository:
 
     async def create(
             self,
-            order_id: int,
-            quantity: int,
-            product_id: int,
-            price: float,
-    ) -> OrdersProducts:
-        stmt = insert(Product).values(
-            order_id=order_id,
-            quantity=quantity,
-            product_id=product_id,
-            price=price,
-        ).returning(OrdersProducts)
-        result = await self.session.execute(stmt)
+            products: list[OrderProductsCreate],
+            order: Order
+    ):
+        order_products = [
+            OrdersProducts(
+                order_id=order.id,
+                quantity=product.quantity,
+                product_id=product.product_id,
+                price=product.price
+            )
+            for product in products
+        ]
+        self.session.add_all(order_products)
         await self.session.flush()
-        order_product = result.scalars().first()
-        return order_product
+
+
+    async def get(
+            self,
+            order: Order,
+    ):
+        stmt = select(OrdersProducts).where(OrdersProducts.order_id == order.id, OrdersProducts.products_id == product.id)
+        result = await self.session.execute(stmt)
+        products = result.scalars().all()
+        return products
+
+    async def get_all(
+            self,
+            order: Order
+    ):
+        stmt = select(OrdersProducts).where(OrdersProducts.order_id == order.id)
+        result = await self.session.execute(stmt)
+        products = result.scalars().all()
+        return products
+
 
     async def delete(
             self,
-            order_product: OrdersProducts,
-    ) -> None:
-        await self.session.delete(order_product)
+            order: Order,
+    ):
+        stmt = delete(OrdersProducts).where(OrdersProducts.order_id == order.id)
+        await self.session.execute(stmt)
         await self.session.flush()
-
-    async def update(
-            self,
-            order_product: OrdersProducts,
-            quantity: int,
-            product_id: int,
-            price: float,
-            order_id: int,
-    ) -> None:
-        order_product.order_id = order_id
-        order_product.quantity = quantity
-        order_product.product_id = product_id
-        order_product.price = price
-        await self.session.update(order_product)
-        await self.session.flush()
-        
-
-    async def get_by_id(
-            self,
-            order_id: int,
-    ) -> OrdersProducts:
-        stmt = select(Product).where(OrdersProducts.order_id == order_id)
-        result = await self.session.execute(stmt)
-        order_product = result.scalar_one_or_none()
-        return order_product
-
-
-    async def get_all(self):
-        pass

@@ -9,7 +9,9 @@ from app.auth.routers import router as auth_router
 
 from category.router import router as category_router
 
-from app.routers import product_router
+from app.products.routers import product_router
+
+from app.orders.routers import order_router
 
 from app.core.exceptions import Unauthorized, Forbidden, NotFound, Conflict, BadRequest
 
@@ -71,6 +73,7 @@ async def bad_request_exception_handler(request: Request, exc: BadRequest):
 app.include_router(auth_router)
 app.include_router(category_router)
 app.include_router(product_router)
+app.include_router(order_router)
 
 
 

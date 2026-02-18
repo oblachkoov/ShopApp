@@ -22,8 +22,6 @@ from app.core.models import Base
 from app.auth.models import User
 from category.module import Categories
 from app.products.models import Product, ProductCharacteristics, ProductReview
-from app.products.schemas import ProductReviewCreate, ProductReviewUpdate
-from app.orders.schemas import OrderCreate, OrderUpdate
 from app.orders.models import Orders, OrdersProducts
 target_metadata = Base.metadata
 

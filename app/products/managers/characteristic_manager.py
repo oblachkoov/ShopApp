@@ -2,7 +2,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.products.models import ProductCharacteristics, Product
 from app.products.repositories.characteristic_repo import CharacteristicRepo
-from app.products.schemas import ProductCharacteristicsCreate, ProductCharacteristicsUpdate, CharacteristicNotFound
+from app.products.schemas import ProductCharacteristicsCreate, ProductCharacteristicsUpdate
+from app.products.exceptions import CharacteristicNotFound
+
 
 
 class CharacteristicManager:
